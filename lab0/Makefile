@@ -15,7 +15,7 @@ BUILD_DIR=build
 # PHONY, synonym to false, tells the make 
 .PHONY: all clean
 
-# We input the make configurations from below
+# We input the make targets from below
 all: countdown 
 
 countdown:
