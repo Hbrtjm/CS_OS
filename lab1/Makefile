@@ -32,11 +32,11 @@ client_static: $(SRC_DIR)/client_static.c libstatic
 
 # Here we basically have the same code for client, but just to see separate two programs  
 client_shared: $(SRC_DIR)/client_shared.c libshared
-	$(CC) $(CFLAGS) -o $(BUILD_DIR)/client_shared $(SRC_DIR)/client_shared.c -L$(BUILD_DIR) -lcollatz -Wl,-rpath=./$(BUILD_DIR)
+	$(CC) -o $(BUILD_DIR)/client_shared $(SRC_DIR)/client_shared.c -L$(BUILD_DIR) -lcollatz -Wl,-rpath=./$(BUILD_DIR)
 
 # Here we have to load the library by overriding the DYNAMIC environmental variable using -D DYNAMIC=1, we show where the library is located $(BUILD_DIR), and where we should r(e)path the linking 
 client_dynamic: $(SRC_DIR)/client_dynamic.c libshared
-	$(CC) $(CFLAGS) -o $(BUILD_DIR)/client_dynamic $(SRC_DIR)/client_dynamic.c -D DYNAMIC=1 -L$(BUILD_DIR) -lcollatz -Wl,-rpath=./$(BUILD_DIR) -lcollatz
+	$(CC) -o $(BUILD_DIR)/client_dynamic $(SRC_DIR)/client_dynamic.c -D DYNAMIC=1 -L$(BUILD_DIR) -lcollatz -Wl,-rpath=./$(BUILD_DIR) -lcollatz
 
 # Remove the entire build, just as before
 clean:
