@@ -1,5 +1,7 @@
 CC=gcc
-CFLAGS=-std=c17 -Wall -Werror -Wextra -g -fPIC -Isrc
+# -Isrc - adds include directory of header files
+# -fPIC - generate position-independent code 
+CFLAGS=-std=c17 -Wall -g -fPIC -Isrc
 
 SRC_DIR=./src
 BUILD_DIR=./build
@@ -32,13 +34,12 @@ client_static: $(SRC_DIR)/client_static.c libstatic
 
 # Here we basically have the same code for client, but just to see separate two programs  
 client_shared: $(SRC_DIR)/client_shared.c libshared
-	$(CC) -o $(BUILD_DIR)/client_shared $(SRC_DIR)/client_shared.c -L$(BUILD_DIR) -lcollatz -Wl,-rpath=./$(BUILD_DIR)/
+	$(CC) $(CFLAGS) -o $(BUILD_DIR)/client_shared $(SRC_DIR)/client_shared.c -lcollatz -Wl,-rpath=./
 
 # Here we have to load the library by overriding the DYNAMIC environmental variable using -D DYNAMIC=1, we show where the library is located $(BUILD_DIR), and where we should r(e)path the linking 
 client_dynamic: $(SRC_DIR)/client_dynamic.c libshared
-	$(CC) -o $(BUILD_DIR)/client_dynamic $(SRC_DIR)/client_dynamic.c -D DYNAMIC=1 -L$(BUILD_DIR) -lcollatz -Wl,-rpath=./$(BUILD_DIR)/ -lcollatz
+	$(CC) $(CFLAGS) -o $(BUILD_DIR)/client_dynamic $(SRC_DIR)/client_dynamic.c -D DYNAMIC=1 -lcollatz -Wl,-rpath=./ 
 
 # Remove the entire build, just as before
 clean:
 	rm -rf $(BUILD_DIR)
-
