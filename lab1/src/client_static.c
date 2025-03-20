@@ -1,6 +1,5 @@
 #include "collatz.h"
 #include <stdio.h>
-#define min(X, Y) (((X) < (Y)) ? (X) : (Y))
 
 int main()
 {

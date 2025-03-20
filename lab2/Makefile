@@ -1,0 +1,27 @@
+CC=gcc
+CFLAGS=-std=c17 -Wall -g -fPIC 
+
+SRC_DIR=src
+BUILD_DIR=build
+LIBNAME=libcollatz
+OBJECTS=$(BUILD_DIR)/collatz.o
+
+.PHONY: all clean
+
+all: flipper
+
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
+
+unpack:
+	mkdir -p $(BUILD_DIR)
+	# Extract the zip file
+	tar -xf art.tgz -C $(BUILD_DIR)
+
+flipper: $(SRC_DIR)/flipper.c unpack | $(BUILD_DIR)
+	$(CC) $(CFLAGS) $(SRC_DIR)/flipper.c -o $(BUILD_DIR)/flipper 
+
+# Remove the entire build, just as before
+clean:
+	rm -rf $(BUILD_DIR)
+
