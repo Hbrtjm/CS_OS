@@ -8,7 +8,7 @@ OBJECTS=$(BUILD_DIR)/collatz.o
 
 .PHONY: all clean
 
-all: flipper
+all: flipper counter
 
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
@@ -17,6 +17,9 @@ unpack:
 	mkdir -p $(BUILD_DIR)
 	# Extract the zip file
 	tar -xf art.tgz -C $(BUILD_DIR)
+
+counter: $(SRC_DIR)/counter.c unpack | $(BUILD_DIR)
+	$(CC) $(CFLAGS) $(SRC_DIR)/counter.c -o $(BUILD_DIR)/counter
 
 flipper: $(SRC_DIR)/flipper.c unpack | $(BUILD_DIR)
 	$(CC) $(CFLAGS) $(SRC_DIR)/flipper.c -o $(BUILD_DIR)/flipper 
