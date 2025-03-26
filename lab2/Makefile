@@ -3,9 +3,6 @@ CFLAGS=-std=c17 -Wall -g -fPIC
 
 SRC_DIR=src
 BUILD_DIR=build
-LIBNAME=libcollatz
-OBJECTS=$(BUILD_DIR)/collatz.o
-
 .PHONY: all clean
 
 all: flipper counter
