@@ -33,7 +33,7 @@ int count_size(const char* dirname, int depth)
 		snprintf(file_path, sizeof(file_path), "%s/%s", dirname, file->d_name);
 		
 		struct stat file_stat;
-		if (stat(file_path, &file_stat) == -1)
+	if (stat(file_path, &file_stat) == -1)
 		{
 			perror("stat error");
 			continue;

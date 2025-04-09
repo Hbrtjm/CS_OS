@@ -7,7 +7,7 @@ SRC_DIR=./src
 BUILD_DIR=./build
 LIBNAME=libcollatz
 OBJECTS=$(BUILD_DIR)/collatz.o
-
+LIB_DIR=./lib
 .PHONY: all clean
 
 all: libstatic libshared client_static client_shared client_dynamic
@@ -16,21 +16,24 @@ all: libstatic libshared client_static client_shared client_dynamic
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
+lib:
+	mkdir -p $(LIB_DIR)
+
 # Create object files of the given library sources
-$(OBJECTS): $(SRC_DIR)/collatz.c | $(BUILD_DIR)
+$(OBJECTS): $(SRC_DIR)/collatz.c | $(BUILD_DIR) lib
 	$(CC) $(CFLAGS) -c $(SRC_DIR)/collatz.c -o $(OBJECTS)
 
 # Compile into a *.a file
 libstatic: $(OBJECTS)
-	ar rcs $(BUILD_DIR)/$(LIBNAME).a $(OBJECTS)
+	ar rcs $(LIB_DIR)/$(LIBNAME).a $(OBJECTS)
 
 # Shared library
 libshared: $(OBJECTS)
-	$(CC) $(CFLAGS) -shared -o $(BUILD_DIR)/$(LIBNAME).so $(OBJECTS)
+	$(CC) $(CFLAGS) -shared -o $(LIB_DIR)/$(LIBNAME).so $(OBJECTS)
 
 # Compile the program with a library by linking it using previously generted *.a files 
 client_static: $(SRC_DIR)/client_static.c libstatic
-	$(CC) $(CFLAGS) -o $(BUILD_DIR)/client_static $(SRC_DIR)/client_static.c $(BUILD_DIR)/$(LIBNAME).a
+	$(CC) $(CFLAGS) -o $(BUILD_DIR)/client_static $(SRC_DIR)/client_static.c $(LIB_DIR)/$(LIBNAME).a
 
 # Here we basically have the same code for client, but just to see separate two programs  
 client_shared: $(SRC_DIR)/client_shared.c libshared
