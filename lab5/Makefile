@@ -10,6 +10,7 @@ SRCDIR=src
 all: integrator sender calculator
 
 prepare:
+	rm -f interval
 	mkdir -p $(BUILDDIR)
 
 integrator: | prepare
