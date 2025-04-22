@@ -24,14 +24,32 @@ int sumuj(int *tab, int n)
 
 double mediana(int *tab, int n)
 {
-	if(n % 2 == 0)
+	int new_tab[n];
+       	for(int i = 0; i < n;i++)
+	{
+		new_tab[i] = tab[i];
+	}	
+	int tmp;
+	for(int i = 0;i < n; i++)
+	{
+		for(int j = i; j < n;j++)
+		{
+			if(new_tab[i] > new_tab[j])
+			{
+				tmp = new_tab[i];
+				new_tab[i] = new_tab[j];
+				new_tab[j] = tmp;
+			}
+		}
+	}
+	if(n % 2 != 0)
 	{
 		// return 1;
-		return tab[(int)(n/2)];
+		return new_tab[(int)(n/2)];
 	}
 	else
 	{
 		// return 1;
-		return ((double)tab[(int)(n/2)] + (double)tab[(int)(n/2+1)]) / 2;	
+		return ((double)new_tab[(int)(n/2)] + (double)new_tab[(int)(n/2+1)]) / 2;	
 	}
 }
