@@ -41,6 +41,7 @@ void handle_sigterm(int sig) {
 
 void handle_sigusr1(int sig) {
     sigusr1_count += 1;
+    printf("SIGUSR1 %d",sigusr1_count);
     if (sigusr1_count == 5) {
        printf("Otrzymano 5 sygnałów SIGUSR1!");
     }
@@ -48,6 +49,7 @@ void handle_sigusr1(int sig) {
 
 void handle_sigusr2(int sig) {
     sigusr2_count += 1;
+    printf("SIGUSR2 %d", sigusr2_count);
     if (sigusr2_count == 3) {
 	printf("Wyjście po 3 sygnałach SIGUSR2. Żegnaj!");
     	exit(0);
