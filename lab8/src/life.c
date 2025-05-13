@@ -22,7 +22,7 @@ int main()
 	while (true)
 	{
 		draw_grid(foreground);
-		usleep(200 * 1000);
+		usleep(10 * 1000);
 
 		// Step simulation
 		update_grid(foreground, background);

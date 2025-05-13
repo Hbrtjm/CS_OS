@@ -1,8 +1,8 @@
 #pragma once
 #include <stdbool.h>
 
-#define GRID_HEIGHT 60
-#define GRID_WIDTH 60
+#define GRID_HEIGHT 35
+#define GRID_WIDTH 35
 
 char *create_grid();
 void destroy_grid(char *grid);
