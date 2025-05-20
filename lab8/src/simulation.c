@@ -14,18 +14,19 @@
 pthread_t threads[MAX_THREADS];
 ThreadDataTypeDef thread_data[MAX_THREADS];
 int n_threads;
-volatile sig_atomic_t ready = 0;
 
 void sigusr1_handler(int sig) {
 }
 
 void* worker_function(void *arg) {
 	ThreadDataTypeDef *data = (ThreadDataTypeDef*)arg;
-
-	signal(SIGUSR1, sigusr1_handler); // Register the handler
+	
+	// Register the handler
+	signal(SIGUSR1, sigusr1_handler); 
 
 	while (1) {
-		pause(); // Wait for SIGUSR1
+		// Wait for SIGUSR1
+		pause(); 
 
 		for (int y = data->start_row; y < data->end_row; y++)  
 		{		
@@ -64,7 +65,6 @@ int main(int argc, char *argv[]) {
 	int rows_per_thread = height / n_threads;
 
 	for (int i = 0; i < n_threads; i++) {
-		thread_data[i].id = i;
 		thread_data[i].start_row = i * rows_per_thread;
 		thread_data[i].end_row = (i == n_threads - 1) ? height : (i + 1) * rows_per_thread;
 		thread_data[i].width = width;

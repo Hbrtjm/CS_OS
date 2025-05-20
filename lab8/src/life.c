@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <ncurses.h>
 #include <locale.h>
 #include <unistd.h>
