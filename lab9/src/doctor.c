@@ -109,24 +109,22 @@ void* doctor_thread_routine(void* arg) {
 	
 		doctor_sleep(doctor);
 	
-		while (!waking_mode && !clinic->all_patients_done) {
 		pthread_cond_wait(&doctor->condition, &doctor->mutex);
-		
-		pthread_mutex_lock(&clinic->medicine_mutex);
-		med_count = clinic->medicine_count;
-		pharm_waiting = clinic->waiting_pharmacists;
-		pthread_mutex_unlock(&clinic->medicine_mutex);
-		
-		pthread_mutex_lock(&queue->mutex);
-		patient_count = queue_count(queue);
-		pthread_mutex_unlock(&queue->mutex);
-		
-		if (patient_count == CLINIC_QUEUE_SIZE && med_count >= MIN_MEDICINE_REQUIRED) {
-			waking_mode = 1;
-		}
-		else if (pharm_waiting > 0 && med_count < MIN_MEDICINE_REQUIRED) {
-			waking_mode = 2;
-		}
+		while (!waking_mode && !clinic->all_patients_done) {
+			
+			pthread_mutex_lock(&clinic->medicine_mutex);
+			med_count = clinic->medicine_count;
+			pharm_waiting = clinic->waiting_pharmacists;
+			pthread_mutex_unlock(&clinic->medicine_mutex);
+			
+			patient_count = queue_count(queue);
+			
+			if (patient_count == CLINIC_QUEUE_SIZE && med_count >= MIN_MEDICINE_REQUIRED) {
+				waking_mode = 1;
+			}
+			else if (pharm_waiting > 0 && med_count < MIN_MEDICINE_REQUIRED) {
+				waking_mode = 2;
+			}
 	}
 	} 
 		pthread_mutex_unlock(&doctor->mutex);
