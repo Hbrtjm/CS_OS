@@ -21,7 +21,7 @@ void format_timestamp(time_t time, char* buffer, size_t buffer_size)
 	strftime(buffer, buffer_size, "%H:%M:%S", tm_info);
 }
 
-int send_message_protocol(int socketfd, const Message* message) 
+int send_message_protocol(int socketfd, const Message* message, struct sockaddr_in *addr, int addr_len) 
 {
 	if (socketfd < 0 || !message)
 	{
@@ -34,32 +34,47 @@ int send_message_protocol(int socketfd, const Message* message)
 	ssize_t total_bytes = sizeof(Message);
 
 	memcpy(buffer, message, sizeof(Message));
-
-	while (bytes_sent < total_bytes)
-	{
-		ssize_t result = send(socketfd, buffer + bytes_sent, total_bytes - bytes_sent, MSG_NOSIGNAL);
-		if (result == -1)
-		{
-			if (errno == EINTR)
-			{
-				// Interrupted by signal
-				continue;
+	
+	if (addr != NULL && addr_len > 0) {
+		bytes_sent = sendto(socketfd, buffer, total_bytes, MSG_NOSIGNAL, (struct sockaddr*)addr, addr_len);
+		if (bytes_sent == -1) {
+			if (errno != EINTR && errno != EAGAIN && errno != EWOULDBLOCK) {
+				perror("Send message protocol error (UDP)");
 			}
-			if (errno == EAGAIN || errno == EWOULDBLOCK)
-			{
-				// Socket would block, wait a bit and try again
-				sleep(1);
-				continue;
-			}
-			perror("Send message protocol error");
 			return -1;
 		}
-		if (result == 0)
-		{
-			fprintf(stderr, "Connection closed during send\n");
-			return 0;
+		if (bytes_sent != total_bytes) {
+			fprintf(stderr, "UDP send incomplete: sent %zd of %zd bytes\n", bytes_sent, total_bytes);
+			return -1;
 		}
-		bytes_sent += result;
+	} else {
+		fprintf(stderr, "UDP address is null or the address is empty, address length: %d\n", addr_len);
+		return -1;
+	//	// If UDP fails, rever back to TCP
+	//	while (bytes_sent < total_bytes)
+	//	{
+	//		ssize_t result = send(socketfd, buffer + bytes_sent, total_bytes - bytes_sent, MSG_NOSIGNAL);
+	//		if (result == -1)
+	//		{
+	//			if (errno == EINTR)
+	//			{
+	//				continue;
+	//			}
+	//			if (errno == EAGAIN || errno == EWOULDBLOCK)
+	//			{
+	//				sleep(1);
+	//				continue;
+	//			}
+	//			perror("Send message protocol error (TCP)");
+	//			return -1;
+	//		}
+	//		if (result == 0)
+	//		{
+	//			fprintf(stderr, "Connection closed during send\n");
+	//			return 0;
+	//		}
+	//		bytes_sent += result;
+	//	}
 	}
 	return bytes_sent;
 }
@@ -433,19 +448,10 @@ int configure_socket(int socket_fd)
 		perror("setsockopt SO_REUSEADDR");
 		return -1;
 	}
-	int keepalive = 1;
-	if (setsockopt(socket_fd, SOL_SOCKET, SO_KEEPALIVE, &keepalive, sizeof(keepalive)) == -1) 
-	{
-		perror("setsockopt SO_KEEPALIVE");
-		return -1;
-	}
-	int nodelay = 1;
-	if (setsockopt(socket_fd, IPPROTO_TCP, TCP_NODELAY, &nodelay, sizeof(nodelay)) == -1) 
-	{
-		perror("setsockopt TCP_NODELAY");
-		return -1;
-	}
-
+	
+	// Remove SO_KEEPALIVE for UDP since it's TCP-specific
+	// UDP doesn't have built-in keepalive mechanism
+	
 	return 0;
 }
 
@@ -453,9 +459,9 @@ int create_server_socket(int port) {
 	int server_socket;
 	struct sockaddr_in server_addr;
 	
-	server_socket = socket(AF_INET, SOCK_STREAM, 0);
-	if (server_socket == -1) 
-	{
+	// Create UDP socket instead of TCP
+	server_socket = socket(AF_INET, SOCK_DGRAM, 0);
+	if (server_socket == -1) {
 		perror("Server socket creation failed");
 		return -1;
 	}
@@ -478,12 +484,8 @@ int create_server_socket(int port) {
 		return -1;
 	}
 
-	if (listen(server_socket, MAX_CLIENTS) == -1) 
-	{
-		perror("Server socket listen failed");
-		close(server_socket);
-		return -1;
-	}
+	// Remove listen() call since UDP doesn't use it
+	// UDP sockets don't need to listen
 
 	return server_socket;
 }

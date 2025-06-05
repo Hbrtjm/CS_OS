@@ -1,7 +1,0 @@
-{
-    "files.associations": {
-        "common.h": "c",
-        "unistd.h": "c",
-        "pthread.h": "c"
-    }
-}

@@ -11,6 +11,7 @@ typedef struct {
 	int server_port;
 	int is_connected;
 	int is_running;
+	struct sockaddr_in server_addr;
 	pthread_t receive_thread;
 	pthread_mutex_t send_mutex;
 	pthread_mutex_t state_mutex;  // For thread-safe state access

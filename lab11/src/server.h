@@ -36,12 +36,19 @@ void remove_client(Server* server, int client_index);
 int find_client_by_id(Server* server, const char* client_id);
 int find_client_by_socket(Server* server, int socket);
 
-void* handle_client(void* arg);
-void handle_list_request(Server* server, int client_socket);
-void handle_2all_request(Server* server, const Message* msg, int sender_socket);
-void handle_2one_request(Server* server, const Message* msg, int sender_socket);
-void handle_stop_request(Server* server, int client_socket);
-void handle_alive_response(Server* server, int client_socket);
+// void* handle_client(void* arg);
+// void handle_list_request(Server* server, int client_socket);
+// void handle_2all_request(Server* server, const Message* msg, int sender_socket);
+// void handle_2one_request(Server* server, const Message* msg, int sender_socket);
+// void handle_stop_request(Server* server, int client_socket);
+// void handle_alive_response(Server* server, int client_socket);
+
+void handle_message_directly(Server* server, Message* msg, struct sockaddr_in* client_addr, socklen_t addr_len);
+int add_client_udp(Server* server, struct sockaddr_in client_addr, const char* client_id);
+void handle_list_request_udp(Server* server, struct sockaddr_in* client_addr, socklen_t addr_len);
+void handle_2all_request_udp(Server* server, const Message* msg);
+void handle_2one_request_udp(Server* server, const Message* msg);
+void handle_stop_request_udp(Server* server, struct sockaddr_in* client_addr, socklen_t addr_len, const char* client_id);
 
 void* keepalive_monitor(void* arg);
 void send_client_list(Server* server, int client_socket);

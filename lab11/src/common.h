@@ -42,7 +42,7 @@ typedef struct {
 	int content_length;
 } Message;
 
-int send_message_protocol(int socket, const Message* msg);
+int send_message_protocol(int socket, const Message* msg, struct sockaddr_in *addr, int addr_len);
 int receive_message_protocol(int socket, Message* msg);
 int validate_message(const Message* msg);
 void format_timestamp(time_t time, char* buffer, size_t buffer_size);

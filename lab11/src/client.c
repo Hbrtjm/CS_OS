@@ -99,8 +99,9 @@ int client_connect(Client *client)
 	}
 
 	struct sockaddr_in server_addr;
-	client->server_socket = socket(AF_INET, SOCK_STREAM, 0);
-	if (client->server_socket == -1) {
+	client->server_socket = socket(AF_INET, SOCK_DGRAM, 0);
+	if (client->server_socket == -1) 
+	{
 		perror("Socket creation failed");
 		return -1;
 	}
@@ -110,31 +111,31 @@ int client_connect(Client *client)
 	server_addr.sin_port = htons(client->server_port);
 
 	int result = inet_pton(AF_INET, client->server_ip, &server_addr.sin_addr);
-	if (result <= 0) {
-		if (result == -1) {
+	if (result <= 0) 
+	{
+		if (result == -1) 
+		{
 			perror("There was an error while converting the address");
-		} else {
+		} else 
+		{
 			fprintf(stderr, "Incorrect server address\n");
 		}
 		close(client->server_socket);
 		return -1;
 	}
+	
+	client->server_addr = *(struct sockaddr_in*)&server_addr;
+	
+	printf("Saved server address %s:%d\n", client->server_ip, client->server_port);
 
-	if (connect(client->server_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1) {
-		perror("Connection to server failed");
-		close(client->server_socket);
-		return -1;
-	}
-
-	printf("Connected to server %s:%d\n", client->server_ip, client->server_port);
-
+	// Just ping the server, do not connect
 	Message reg_msg = {0};
 	reg_msg.type = MSG_LIST;
 	strncpy(reg_msg.sender_id, client->client_id, MAX_CLIENT_NAME-1);
 	reg_msg.timestamp = time(NULL);
 	
-	if (send_message_protocol(client->server_socket, &reg_msg) == -1) {
-		fprintf(stderr, "Failed to register with server\n");
+	if (send_message_protocol(client->server_socket, &reg_msg, &client->server_addr, sizeof(client->server_addr)) == -1) {
+		fprintf(stderr, "Failed server is dead\n");
 		close(client->server_socket);
 		return -1;
 	}
@@ -180,7 +181,12 @@ int client_init(Client* client, const char* client_id, const char* server_ip, in
 		fprintf(stderr, "Invalid client ID\n");
 		return -1;
 	}
-
+	struct sockaddr_in server_addr = {
+			.sin_family = AF_INET,
+			.sin_port = htons(server_port)
+	};
+inet_pton(AF_INET, server_ip, &server_addr.sin_addr);
+client->server_addr = *(struct sockaddr_in*)&server_addr;
 	memset(client, 0, sizeof(Client));
 	strncpy(client->client_id, client_id, MAX_CLIENT_NAME - 1);
 	strncpy(client->server_ip, server_ip, 15);
@@ -190,18 +196,18 @@ int client_init(Client* client, const char* client_id, const char* server_ip, in
 	client->is_running = 0;
 	
 	if (pthread_mutex_init(&client->send_mutex, NULL) != 0) {
-		perror("Failed to initialize send mutex");
+		printf("Failed to initialize send mutex");
 		return -1;
 	}
 
 	if (pthread_mutex_init(&client->state_mutex, NULL) != 0) {
-		perror("Failed to initialize state mutex");
+		printf("Failed to initialize state mutex");
 		pthread_mutex_destroy(&client->send_mutex);
 		return -1;
 	}
 	
 	if (pthread_cond_init(&client->shutdown_cond, NULL) != 0) {
-		perror("Failed to initialize condition variable for client shutdown");
+		printf("Failed to initialize condition variable for client shutdown");
 		pthread_mutex_destroy(&client->send_mutex);
 		pthread_mutex_destroy(&client->state_mutex);
 		return -1;
@@ -220,8 +226,10 @@ int client_send_list_request(Client* client)
 	msg.type = MSG_LIST;
 	strncpy(msg.sender_id, client->client_id, MAX_CLIENT_NAME-1);
 	msg.timestamp = time(NULL);
-
-	int result = send_message_protocol(client->server_socket, &msg);
+	// Changed
+	int result = send_message_protocol(client->server_socket, &msg, 
+								  &client->server_addr, sizeof(client->server_addr));
+	// int result = send_message_protocol(client->server_socket, &msg, client->server_addr, sizeof(client->server_addr));
 	pthread_mutex_unlock(&client->send_mutex);
 	return result;
 }
@@ -244,7 +252,10 @@ int client_send_2all(Client* client, const char* message)
 	msg.timestamp = time(NULL);
 	printf("Sending it\n");
 	fflush(stdout);
-	int result = send_message_protocol(client->server_socket, &msg);
+	// Changed here
+	int result = send_message_protocol(client->server_socket, &msg, 
+								  &client->server_addr, sizeof(client->server_addr));
+	// int result = send_message_protocol(client->server_socket, &msg);
 	printf("Done sending\n");
 	fflush(stdout);
 	pthread_mutex_unlock(&client->send_mutex);
@@ -267,8 +278,10 @@ int client_send_2one(Client* client, const char* recipient_id, const char* messa
 	strncpy(msg.content, message, MAX_MESSAGE_SIZE - 1);
 	msg.content_length = strlen(message);
 	msg.timestamp = time(NULL);
-
-	int result = send_message_protocol(client->server_socket, &msg);
+	// Changed
+	int result = send_message_protocol(client->server_socket, &msg, 
+								  &client->server_addr, sizeof(client->server_addr));
+	// int result = send_message_protocol(client->server_socket, &msg);
 
 	pthread_mutex_unlock(&client->send_mutex);
 	return result;
@@ -284,8 +297,10 @@ int client_send_stop(Client* client)
 	msg.type = MSG_STOP;
 	strncpy(msg.sender_id, client->client_id, MAX_CLIENT_NAME-1);
 	msg.timestamp = time(NULL);
-
-	int result = send_message_protocol(client->server_socket, &msg);
+	// Changed here
+	int result = send_message_protocol(client->server_socket, &msg, 
+								  &client->server_addr, sizeof(client->server_addr));
+	// int result = send_message_protocol(client->server_socket, &msg);
 	pthread_mutex_unlock(&client->send_mutex);
 	return result;
 }
@@ -301,27 +316,41 @@ int client_send_alive_response(Client* client)
 	strncpy(msg.sender_id, client->client_id, MAX_CLIENT_NAME-1);
 	msg.timestamp = time(NULL);
 
-	int result = send_message_protocol(client->server_socket, &msg);
+	int result = send_message_protocol(client->server_socket, &msg, 
+								  &client->server_addr, sizeof(client->server_addr));
+	// int result = send_message_protocol(client->server_socket, &msg);
 	pthread_mutex_unlock(&client->send_mutex);
 	return result;
 }
 
+// Replace receive_message_protocol call with recvfrom:
 void* client_receive_messages(void* arg) 
 {
 	Client* client = (Client*)arg;
 	Message msg;
+	struct sockaddr_in from_addr;
+	socklen_t from_len = sizeof(from_addr);
 	
 	while (client->is_running) {
-		int result = receive_message_protocol(client->server_socket, &msg);
+		ssize_t bytes_received = recvfrom(client->server_socket, &msg, sizeof(Message), 0,
+										 (struct sockaddr*)&from_addr, &from_len);
 		
-		if (result <= 0) {
-			if (result == 0) {
-				printf("Server disconnected\n");
-			} else {
-				perror("Error receiving message: ");
-			}
+		if (bytes_received == -1) {
+			if (errno == EINTR) continue;
+			if (errno == EAGAIN || errno == EWOULDBLOCK) continue;
+			perror("Error receiving message");
 			client_stop(client);
 			break;
+		}
+		
+		if (bytes_received == 0 || bytes_received != sizeof(Message)) {
+			printf("Received incomplete message\n");
+			continue;
+		}
+		
+		if (!validate_message(&msg)) {
+			printf("Received invalid message\n");
+			continue;
 		}
 		
 		handle_received_message(client, &msg);
@@ -395,8 +424,7 @@ void print_help()
 	printf("\n");
 }
 
-void handle_user_input(Client* client, const char* input) 
-{
+void handle_user_input(Client* client, const char* input) {
 	
 	if (!client || !input) return;
 	char *input_copy = (char*)malloc(MAX_MESSAGE_SIZE); 
@@ -467,18 +495,15 @@ void handle_user_input(Client* client, const char* input)
 	free(input_copy);
 }
 
-void client_run_interactive(Client* client) 
-{
+void client_run_interactive(Client* client) {
 	char input[BUFFER_SIZE];
 	
 	while (client->is_running) {
 		printf("\r > ");
 		fflush(stdout);
 		
-		if (fgets(input, sizeof(input), stdin) == NULL) 
-		{
-			if (feof(stdin)) 
-			{
+		if (fgets(input, sizeof(input), stdin) == NULL) {
+			if (feof(stdin)) {
 				printf("\nEOF received, exiting...\n");
 				break;
 			}
@@ -501,10 +526,8 @@ void client_run_interactive(Client* client)
 	}
 }
 
-int main(int argc, char *argv[]) 
-{
-	if (argc < 4) 
-	{
+int main(int argc, char *argv[]) {
+	if (argc < 4) {
 		printf("Usage: %s <client_id> <server_ip> <server_port>\n", argv[0]);
 		return 1;
 	}
@@ -514,14 +537,12 @@ int main(int argc, char *argv[])
 	char *server_ip = argv[2];
 	int server_port = atoi(argv[3]);
 	
-	if (client_init(&client, client_id, server_ip, server_port) == -1) 
-	{
+	if (client_init(&client, client_id, server_ip, server_port) == -1) {
 		fprintf(stderr, "Failed to initialize the client\n");
 		return 2;
 	}
 	
-	if (client_connect(&client) == -1) 
-	{
+	if (client_connect(&client) == -1) {
 		fprintf(stderr, "Failed to connect to the server\n");
 		client_cleanup(&client);
 		return 3;

@@ -1,0 +1,8 @@
+Wpis rodzica. Petla 9. Spalem 4
+Wpis dziecka. Petla 9. Spalem 7
+Wpis dziecka. Petla 8. Spalem 1
+Wpis dziecka. Petla 7. Spalem 3
+Wpis rodzica. Petla 8. Spalem 10
+Wpis dziecka. Petla 6. Spalem 4
+Wpis rodzica. Petla 7. Spalem 4
+Wpis dziecka. Petla 5. Spalem 3
