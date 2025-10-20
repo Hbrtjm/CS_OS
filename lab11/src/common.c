@@ -50,31 +50,6 @@ int send_message_protocol(int socketfd, const Message* message, struct sockaddr_
 	} else {
 		fprintf(stderr, "UDP address is null or the address is empty, address length: %d\n", addr_len);
 		return -1;
-	//	// If UDP fails, rever back to TCP
-	//	while (bytes_sent < total_bytes)
-	//	{
-	//		ssize_t result = send(socketfd, buffer + bytes_sent, total_bytes - bytes_sent, MSG_NOSIGNAL);
-	//		if (result == -1)
-	//		{
-	//			if (errno == EINTR)
-	//			{
-	//				continue;
-	//			}
-	//			if (errno == EAGAIN || errno == EWOULDBLOCK)
-	//			{
-	//				sleep(1);
-	//				continue;
-	//			}
-	//			perror("Send message protocol error (TCP)");
-	//			return -1;
-	//		}
-	//		if (result == 0)
-	//		{
-	//			fprintf(stderr, "Connection closed during send\n");
-	//			return 0;
-	//		}
-	//		bytes_sent += result;
-	//	}
 	}
 	return bytes_sent;
 }
